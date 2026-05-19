@@ -20,6 +20,7 @@ from pathlib import Path
 
 import partitura as pt
 import partitura.score as score
+from partitura.io.exportmidi import get_ppq
 
 
 _EMPTY_PARTLIST_XML = """\
@@ -71,6 +72,12 @@ class TestMidiExportRobustness(unittest.TestCase):
             # Caller should see a useful message, not a raw numpy error.
             self.assertIn("no parts", str(cm.exception).lower())
 
+    def test_get_ppq_empty_parts_returns_safe_default(self):
+        # save_score_midi raises before calling get_ppq on an empty score, so
+        # this guards the helper's own no-parts branch directly: returns a
+        # representable header value (480) without crashing in np.concatenate.
+        self.assertEqual(get_ppq([]), 480)
+
     def test_ppq_overflow_is_capped_with_warning(self):
         """Synthesize a part whose quarter_duration exceeds the SMF 16-bit
         ticks-per-beat ceiling so get_ppq must cap and warn."""
@@ -110,5 +117,5 @@ class TestMusicXMLImportRobustness(unittest.TestCase):
             )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()
